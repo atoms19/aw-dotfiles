@@ -9,6 +9,8 @@ prefers a custom made shitty UI with no eyecandy over smthn you'd see in reddit 
 over everything else 
 
 (prolly no one will use this , no one should, but hey incase i forget)
+
+![ahh its just a screen shot](./screen.png)
 ## custom aliases/scripts that saves lives
 
 `fcd()` - fcd stands for fast change directory i wrote this script so that i can easily cd fast with fuzzy finding 
