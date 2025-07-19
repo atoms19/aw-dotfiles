@@ -1,0 +1,224 @@
+                 # atom's sway configuration (very PEAK)
+
+
+# start the notifications...........................................
+exec mako
+
+exec wl-paste --watch cliphist store
+
+# some global variables ...........................................
+
+
+# windows key as main modifier 
+set $mod Mod4
+
+# WASD for easier movement as its close to windows key
+set $left h
+set $down j
+set $up k
+set $right l
+
+
+# some app binds___
+
+# main terminal 
+set $term foot
+
+# app launcher
+set $menu wofi --show drun 
+
+#file explorer (GUI)
+set $files "org.gnome.Nautilus"
+
+# visuals .....................................................
+
+# setting wallpaper 
+output * bg  /home/atoms/Pictures/forest.jpeg fill
+
+# window___
+
+#border thickness
+default_border pixel 2
+
+# window gap
+gaps inner 7
+
+# window specific opacity 
+for_window [app_id=$term] opacity 0.7
+for_window [app_id=$files] opacity 0.7
+for_window [app_id="org.pulseaudio.pavucontrol"] opacity 0.35
+for_window [class=".*"] opacity 0.9
+# window tiling behaviour 
+exec_always autotiling-rs
+
+# waybar 
+exec_always waybar
+
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway _JAVA_AWT_WM_NONREPARENTING=1
+
+
+# window theme	
+client.unfocused #9751E1 #49306d #ffffff #5c5c5c
+client.focused #9751E1 #bbaffa #222222 #9751E1
+client.focused_inactive #9751E1 #857a96 #2e2045  #5c5c5c
+client.urgent #9751E1 #e38193 #400a14 #5c5c5c
+
+#reading mode helper
+exec_always wlsunset -l 9.9983 -L 76.3167 -T 6500 -t 4200
+
+# ? tip --------------------
+# to change displays
+#   output HDMI-A-1 resolution 1920x1080 position 1920,0
+# swaymsg -t get_outputs
+#------------------------
+ # idle mode 
+ for_window [class="Brave-browser"] inhibit_idle fullscreen
+ for_window [class="Brave-browser"] inhibit_idle focus
+
+exec_always swayidle \
+  timeout 300 ~/.local/bin/lock.sh \
+  timeout 330 'swaymsg "output * dpms off"' \
+  resume 'swaymsg "output * dpms on"' \
+  before-sleep ~/.local/bin/lock.sh
+# inputs.................................................................
+
+
+# touchpad stuff 
+input "1267:12889:VEN_04F3:00_04F3:3259_Touchpad" {
+       dwt enabled
+       tap enabled
+     natural_scroll enabled
+     middle_emulation enabled
+}
+
+# binding caps lock to esc (vim btw) 
+input "type:keyboard" xkb_options caps:escape
+
+
+# disabling crippled keyboard  
+input "1:1:AT_Translated_Set_2_keyboard" events disabled
+
+# ? tip : swaymsg -t get_inputs
+
+
+# key binds ....................................................
+
+    # close window 
+    bindsym $mod+c kill
+
+    # lanuch terminal 
+	 bindsym $mod+q exec $term
+	 bindsym $mod+Shift+q exec ~/.local/bin/foot-clone.sh
+
+    # app laucher 
+    bindsym Menu+Return exec $menu
+    bindsym $mod+Return exec $menu
+
+     # reload sway also clear the waybar 
+    bindsym $mod+Shift+c exec pkill waybar & pkill wlsunset & swaymsg reload 
+
+    # exit sway 
+    bindsym $mod+Shift+e exec  swaymsg exit 
+	 
+	 #lock sway 
+
+	 bindsym Menu+l exec ~/.local/bin/lock.sh
+
+    # turn on hibernation 
+    bindsym $mod+Shift+Return exec systemctl hibernate
+    # change window focus 
+    bindsym $mod+$left focus left
+    bindsym $mod+$down focus down
+    bindsym $mod+$up focus up
+    bindsym $mod+$right focus right
+
+    # shift window postions
+    bindsym $mod+Shift+$left move left
+    bindsym $mod+Shift+$down move down
+    bindsym $mod+Shift+$up move up
+    bindsym $mod+Shift+$right move right
+
+# workspaces___
+
+    # Switch to workspace (3 ws so u dont forget which is where) 
+    bindsym $mod+1 workspace 1
+    bindsym $mod+2 workspace 2
+    bindsym $mod+3 workspace 3
+    
+	 # move window to workspace
+	 bindsym $mod+Shift+1 move container to workspace 1
+    bindsym $mod+Shift+2 move container to workspace 2
+    bindsym $mod+Shift+3 move container to workspace 3
+
+# window modes ___
+    # manual horizontal and vertical splits 
+    bindsym $mod+b splith
+    bindsym $mod+v splitv
+
+    # tabbed mod and entiled mode
+    bindsym $mod+t layout tabbed
+    bindsym $mod+e layout toggle split
+
+    # fullscreen mode
+    bindsym $mod+f fullscreen
+
+# floating___
+
+   # holding modifier for acting on floating windows
+    floating_modifier $mod normal
+
+    # switch to floating mode 
+    bindsym $mod+Shift+space floating toggle
+ 
+    # toggle focus between tiling and floating windows
+    bindsym $mod+space focus mode_toggle
+
+    #move focus to parent 
+    bindsym $mod+p focus parent
+
+# Scratchpad___
+
+    # moves window to the scratchpad
+    bindsym $mod+Shift+minus move scratchpad
+
+    # to show/cycle through scratchpad windows 
+    bindsym $mod+minus scratchpad show
+
+# Resize____
+mode "resize" {
+    # w a s d to adjust window dimensions 
+    bindsym $left resize shrink width 10px
+    bindsym $down resize grow height 10px
+    bindsym $up resize shrink height 10px
+    bindsym $right resize grow width 10px
+
+    # Return to default mode
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+    # enter resize mode
+    bindsym $mod+r mode "resize"
+
+# system controls____
+    # fn row on irl keyboard
+    bindsym --locked XF86AudioMute exec pactl set-sink-mute \@DEFAULT_SINK@ toggle
+    bindsym --locked XF86AudioLowerVolume exec pactl set-sink-volume \@DEFAULT_SINK@ -5%
+    bindsym --locked XF86AudioRaiseVolume exec pactl set-sink-volume \@DEFAULT_SINK@ +5%
+    bindsym --locked XF86AudioMicMute exec pactl set-source-mute \@DEFAULT_SOURCE@ toggle
+    bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
+    bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
+    bindsym Print exec grim
+
+		# menu key workarounds 
+		#volume 
+		bindsym Menu+period  exec pactl set-sink-volume \@DEFAULT_SINK@ +2.5%
+		bindsym Menu+comma  exec pactl set-sink-volume \@DEFAULT_SINK@ -2.5%
+		#brightness
+		bindsym Menu+m exec brightnessctl set 2.5%+
+		bindsym Menu+Shift+m exec brightnessctl set 2.5%-
+		bindsym Menu+e exec ~/.local/bin/wofi-emoji
+		bindsym Menu+p exec ~/.local/bin/wofi-clipboard.sh
+
+      # screenshot saved to a single image 
+		bindsym $mod+Shift+s exec grim -g "$(slurp)" - | tee ~/Pictures/screen.png | wl-copy 
+
