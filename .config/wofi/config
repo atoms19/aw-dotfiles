@@ -1,0 +1,7 @@
+prompt = search apps
+matching=fuzzy
+allow_markup=true
+# allow_images=true
+# image_size=24
+key_expand=Tab
+key_exit=Escape

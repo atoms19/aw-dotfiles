@@ -1,0 +1,134 @@
+{
+    "position":"bottom",
+    "margin-top" : 5,
+    "margin-left": 10,
+    "margin-right": 10,
+    "height" : 20,
+   
+   
+   
+    "modules-left": [
+         "clock"
+    ],
+    "modules-center": [
+		"mpris"
+    ],
+    "modules-right": [
+          "network",
+          "pulseaudio",
+          "battery"
+    ],
+    
+    "sway/window": {
+      "format": "{}",
+      "max-length": 15,
+      "rewrite": {
+        "": "smotium core"
+      },
+      "separate-outputs": true
+    }
+    ,
+    
+    "sway/workspaces": {
+      "format": "{icon}",
+      "on-click": "activate",
+      "sort-by-number": true
+    },
+
+   "clock": {
+    "interval": 60,
+    "format": "{:%I:%M %p}",
+    "max-length": 25 ,
+	 "format-alt": "{:%d-%m-%Y %A}",
+	 "tooltip":false,
+	 "on-click-right":"brave -t --new-window atomcalendar.vercel.app"
+}
+    ,    "cpu": {
+      "format": "  {usage}%",
+      "tooltip": false
+    },
+    "memory": {
+      "format": "{}% space"
+    },
+    "temperature": {
+      "critical-threshold": 80,
+      "format": "{icon} {temperatureC}°C",
+      "format-icons": ["_", "^", "^^"]
+    },
+    "battery": {
+      "states": {
+        "warning": 30,
+        "critical": 15
+      },
+      "format": "{icon}  {capacity}%",
+      "format-full": "{icon}  {capacity}%",
+      "format-charging": "󱐋 {icon} {capacity}%",
+      "format-plugged": "plug {capacity}%",
+      "format-alt": "{time} {icon}",
+      "format-icons": ["", "", "", "", ""]
+    },
+    "network": {
+      "format-wifi": "{icon} {essid}",
+      "format-ethernet": "{cidr} ETH",
+      "tooltip-format": "{ifname} via {gwaddr} ",
+      "format-linked": "{ifname} (No IP) ",
+      "format-disconnected": "_",
+      "format-icons":["_",".","..",":.","::"],
+      "on-click":"foot nmtui"
+    },
+    "pulseaudio": {
+      "format": "{icon} {volume}%",
+      "format-bluetooth": "{volume}% {icon} {format_source}",
+      "format-bluetooth-muted": " {icon} {format_source}",
+      "format-muted": "muted",
+      "format-icons": {
+        "headphone": "󱡏 earphoned",
+        "hands-free": "eek",
+        "headset": "bigchungus",
+        "phone": "mobile",
+        "portable": "mobile",
+        "car": "fucking car ?",
+        "default": ["", "",""]
+      },
+      "on-click": "pavucontrol"
+    }
+	 ,
+	 "mpris":{
+       "format-playing":"󰝚 {title} -{artist}",
+       "format-paused":" {title} -{artist}",
+		 "interval":1,
+		 "title-len":20,
+		 "artist-len":20
+	 },
+	 "custom/music":{
+		"exec":"playerctl metadata --follow -f '{{title}} - {{artist}};'",
+		"format":"󰝚 {}",
+		"interval":"1",
+		"markup":"none",
+      "on-click":"playerctl play-pause",
+		"on-double-click":"playerctl previous",
+		"on-click-right":"playerctl next"
+	 },
+	 "cava": {
+//        "cava_config": "$XDG_CONFIG_HOME/cava/cava.conf",
+        "framerate": 30,
+        "autosens": 1,
+        "sensitivity": 100,
+        "bars": 14,
+        "lower_cutoff_freq": 50,
+        "higher_cutoff_freq": 10000,
+        "method": "pulse",
+        "source": "auto",
+        "stereo": true,
+        "reverse": false,
+        "bar_delimiter": 0,
+        "monstercat": false,
+        "waves": false,
+        "noise_reduction": 0.77,
+        "input_delay": 2,
+        "format-icons" : ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█" ],
+        "actions": {
+                   "on-click-right": "mode"
+                   }
+    }
+}
