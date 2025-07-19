@@ -11,6 +11,7 @@ over everything else
 (prolly no one will use this , no one should, but hey incase i forget)
 
 ![ahh its just a screen shot](./screen1.png)
+![another dev related screenshot](./screen.png)
 ## custom aliases/scripts that saves lives
 
 `fcd()` - fcd stands for fast change directory i wrote this script so that i can easily cd fast with fuzzy finding 
