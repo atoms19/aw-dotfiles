@@ -31,7 +31,6 @@ lfcd () {
   fi
 }
 
-alias work="/home/atoms/.local/bin/work.sh"
 alias java="_JAVA_AWT_WM_NONREPARENTING=1 java"
 alias config='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 fcd() {
@@ -41,15 +40,16 @@ fcd() {
 # pnpm
 fcf() {
   local file filetype
-  file=$(fd --type f --hidden --exclude .git | fzf --height=40% --reverse --preview 'ls -la {}' --query="$1") || return
+  file=$(fd --type f --hidden --exclude .git | fzf --height=40% --reverse --preview '~/.local/bin/preview.sh {}' --query="$1") || return
 
   filetype="$(file -b --mime-type "$file")"
 
   case "$filetype" in
     "application/pdf")
-      zathura "$file" ;;
-    "text/"*)
-      nvim "$file" ;;
+		setsid zathura "$file" >/dev/null 2>&1 < /dev/null & ;;
+    "text/"*|application/json|application/xml|application/javascript)
+		cd "$(dirname "$file")" || return
+		nvim "$(basename "$file")" ;;
     "image/"*)
       chafa "$file" ;;
     "video/"*)
@@ -57,7 +57,7 @@ fcf() {
     *)
       echo "No handler for filetype: $filetype"
       read -p "Open with vim anyway? [y/N] " ans
-      [[ "$ans" =~ ^[Yy]$ ]] && vim "$file"
+      [[ "$ans" =~ ^[Yy]$ ]] && nvim "$file"
       ;;
   esac
 }
@@ -72,6 +72,12 @@ esac
 [ -s "/home/atoms/.bun/_bun" ] && source "/home/atoms/.bun/_bun"
 
 # bun
+export PATH="$HOME/.local/bin:$PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init - zsh)"
+export GTK_ICON_THEME=Papirus-Dark
+export XCURSOR_THEME=Papirus
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
