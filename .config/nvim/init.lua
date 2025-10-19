@@ -1,4 +1,4 @@
--- ========================================================================== --
+
 -- ==                           EDITOR SETTINGS                            == --
 -- ========================================================================== --
 
@@ -18,7 +18,6 @@ vim.o.termguicolors = true
 vim.o.updatetime = 250
 vim.o.timeoutlen = 300
 vim.o.signcolumn = 'yes'
-
 -- Space as leader key
 vim.g.mapleader = ' '
 
@@ -27,9 +26,7 @@ vim.keymap.set({'n', 'x'}, 'gy', '"+y', {desc = 'Copy to clipboard'})
 vim.keymap.set({'n', 'x'}, 'gp', '"+p', {desc = 'Paste clipboard content'})
 
 -- ========================================================================== --
--- ==                               PLUGINS                                == --
--- ========================================================================== --
-
+-- == PLUGINS                                == --
 local lazy = {}
 
 function lazy.install(path)
@@ -68,9 +65,6 @@ lazy.path = table.concat({
 
 lazy.opts = {}
 
--- Learn more about lazy.nvim
--- (plugin configuration, how to split your config in multiple files)
--- https://dev.to/vonheikemen/lazynvim-plugin-configuration-3opi
 lazy.setup({
   {'folke/tokyonight.nvim'},
   { "rose-pine/neovim", name = "rose-pine" },
@@ -91,7 +85,32 @@ lazy.setup({
   dependencies = { 'williamboman/mason.nvim' },
 },
 { "stevearc/dressing.nvim"},
-{'nvim-java/nvim-java'} 
+{'nvim-java/nvim-java'},
+{
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = "markdown",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    },{
+"github/copilot.vim"
+},{
+  "hedyhli/outline.nvim",
+  lazy = true,
+  cmd = { "Outline", "OutlineOpen" },
+  keys = { -- Example mapping to toggle outline
+    { "<leader>o", "<cmd>Outline<CR>", desc = "Toggle outline" },
+  },
+  opts = {
+    -- Your setup opts here
+  },
+},{
+  "HakonHarnes/img-clip.nvim",
+  event = "VeryLazy",
+  opts = {
+  },
+  keys = {
+    { "<leader>p", "<cmd>PasteImage<cr>", desc = "Paste image from system clipboard" },
+  },
+}
 })
 
 -- ========================================================================== --
@@ -104,8 +123,57 @@ vim.cmd.colorscheme('rose-pine')
 require('nvim-treesitter.configs').setup({
   highlight = {enable = true,},
   auto_install = true,
-  ensure_installed = {'lua', 'vim', 'vimdoc', 'json'},
+  ensure_installed = {'lua', 'vim','vimdoc', 'json'},
 })
+
+require('render-markdown').setup({
+		latex={
+		  enabled = true,
+		  pylatexenc = {
+      enabled = true,
+    },
+		  
+		},
+      code = {
+        sign = false,
+		  conceal_delimiters = true,
+        width = "block",
+        language_icon = true,
+        language_pad = 1,
+        left_pad = 1,
+        right_pad = 2,
+        inline_pad = 1,
+      },
+      heading = {
+		  sign=false,
+        width = "block",
+		  min_width=60,
+		  position="inline",
+		  right_pad=2,
+		  border=true,
+		  left_pad=1
+      },
+      quote = {
+        highlight = "NonText",
+        repeat_linebreak = true,
+      },
+      bullet = {
+        icons = { "■", "□", "●", "○", "◆", "◊" },
+      },
+      pipe_table = {
+		  cell="raw"
+      },
+      html = { comment = { conceal = false } },
+      link = {
+        image = "  ",
+        email = "󰇮  ",
+        hyperlink = link_char,
+        custom = {
+          youtube = { pattern = "youtube%.com", icon = "  " },
+          github = { pattern = "github%.com", icon = "  " },
+        },
+      }})
+
 
 -- See :help which-key.nvim-which-key-setup
 require('which-key').setup({
@@ -124,6 +192,9 @@ require('which-key').add({
   {'<leader>f', group = 'Fuzzy Find'},
   {'<leader>b', group = 'Buffer'},
 })
+
+
+
 
 -- See :help MiniIcons.config
 -- Change style to 'glyph' if you have a font with fancy icons
@@ -212,8 +283,17 @@ mini_statusline.setup({
 require('mini.extra').setup({})
 
 -- See :help MiniSnippets.config
-require('mini.snippets').setup({})
+local gen_loader = require('mini.snippets').gen_loader
+require('mini.snippets').setup({
+  snippets = {
+    -- Load custom file with global snippets first (adjust for Windows)
+    gen_loader.from_file('~/.config/nvim/snippets/global.json'),
 
+    -- Load snippets based on current language by reading files from
+    -- "snippets/" subdirectories from 'runtimepath' directories.
+    gen_loader.from_lang(),
+  },
+})
 -- See :help MiniCompletion.config
 require('mini.completion').setup({})
 
@@ -269,5 +349,8 @@ require('lspconfig').tailwindcss.setup({})
 require('lspconfig').clangd.setup({})
 require('lspconfig').jdtls.setup({})
 require('lspconfig').emmet_ls.setup({})
+require('lspconfig').arduino_language_server.setup({})
 vim.keymap.set('n', '<leader>w', vim.diagnostic.open_float, { desc = "Show diagnostic" })
 
+
+-- vim.lsp.document_color.enable()

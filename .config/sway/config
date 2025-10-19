@@ -33,7 +33,9 @@ set $files "org.gnome.Nautilus"
 # visuals .....................................................
 
 # setting wallpaper 
-output * bg  /home/atoms/Pictures/forest.jpeg fill
+# output * bg  /home/atoms/Pictures/forest.jpeg fill
+output * bg  /home/atoms/Downloads/wallnew.jpg fill
+output * bg  /home/atoms/Downloads/wallnew-colorized.png fill
 
 # window___
 
@@ -50,10 +52,10 @@ for_window [app_id="org.pulseaudio.pavucontrol"] opacity 0.35
 for_window [class=".*"] opacity 0.9
 # window tiling behaviour 
 exec_always autotiling-rs
-
+exec swayosd_server
 # waybar 
 exec_always waybar
-
+exec_always ags run '.config/ags/'
 exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway _JAVA_AWT_WM_NONREPARENTING=1
 
 
@@ -66,9 +68,13 @@ client.urgent #9751E1 #e38193 #400a14 #5c5c5c
 #reading mode helper
 exec_always wlsunset -l 9.9983 -L 76.3167 -T 6500 -t 4200
 
+# run ollama 
+exec_always ollama serve
 # ? tip --------------------
 # to change displays
-#   output HDMI-A-1 resolution 1920x1080 position 1920,0
+
+ output eDP-1 resolution 1920x1080 position 0,0
+ output HDMI-A-1 resolution 1920x1080 position 0,0
 # swaymsg -t get_outputs
 #------------------------
  # idle mode 
@@ -80,6 +86,7 @@ exec_always swayidle \
   timeout 330 'swaymsg "output * dpms off"' \
   resume 'swaymsg "output * dpms on"' \
   before-sleep ~/.local/bin/lock.sh
+
 # inputs.................................................................
 
 
@@ -89,14 +96,18 @@ input "1267:12889:VEN_04F3:00_04F3:3259_Touchpad" {
        tap enabled
      natural_scroll enabled
      middle_emulation enabled
+	  drag_lock disabled 
 }
+
+mouse_warping container
 
 # binding caps lock to esc (vim btw) 
 input "type:keyboard" xkb_options caps:escape
 
 
 # disabling crippled keyboard  
-input "1:1:AT_Translated_Set_2_keyboard" events disabled
+ # input "1:1:AT_Translated_Set_2_keyboard" events disabled
+# use keyb-toggle.sh
 
 # ? tip : swaymsg -t get_inputs
 
@@ -115,7 +126,7 @@ input "1:1:AT_Translated_Set_2_keyboard" events disabled
     bindsym $mod+Return exec $menu
 
      # reload sway also clear the waybar 
-    bindsym $mod+Shift+c exec pkill waybar & pkill wlsunset & swaymsg reload 
+    bindsym $mod+Shift+c exec pkill waybar & pkill wlsunset & pkill gjs & swaymsg reload 
 
     # exit sway 
     bindsym $mod+Shift+e exec  swaymsg exit 
@@ -125,10 +136,10 @@ input "1:1:AT_Translated_Set_2_keyboard" events disabled
 	 bindsym Menu+l exec ~/.local/bin/lock.sh
 
     # turn on hibernation 
-    bindsym $mod+Shift+Return exec systemctl hibernate
+    bindsym $mod+Shift+Alt+Return exec systemctl hibernate
     # change window focus 
     bindsym $mod+$left focus left
-    bindsym $mod+$down focus down
+    # bindsym $mod+$down focus down
     bindsym $mod+$up focus up
     bindsym $mod+$right focus right
 
@@ -138,17 +149,24 @@ input "1:1:AT_Translated_Set_2_keyboard" events disabled
     bindsym $mod+Shift+$up move up
     bindsym $mod+Shift+$right move right
 
+
+	 # keybind shortcuts 
+	 bindsym $mod+Shift+g exec brave www.chatgpt.com
 # workspaces___
 
     # Switch to workspace (3 ws so u dont forget which is where) 
     bindsym $mod+1 workspace 1
     bindsym $mod+2 workspace 2
     bindsym $mod+3 workspace 3
+	 bindsym $mod+Shift+0 workspace 10
     
 	 # move window to workspace
 	 bindsym $mod+Shift+1 move container to workspace 1
     bindsym $mod+Shift+2 move container to workspace 2
     bindsym $mod+Shift+3 move container to workspace 3
+    bindsym $mod+Shift+alt+0 move container to workspace 10
+
+	 bindsym Menu+Escape exec ags toggle wifi-module
 
 # window modes ___
     # manual horizontal and vertical splits 
@@ -163,7 +181,6 @@ input "1:1:AT_Translated_Set_2_keyboard" events disabled
     bindsym $mod+f fullscreen
 
 # floating___
-
    # holding modifier for acting on floating windows
     floating_modifier $mod normal
 
@@ -214,11 +231,12 @@ mode "resize" {
 		bindsym Menu+period  exec pactl set-sink-volume \@DEFAULT_SINK@ +2.5%
 		bindsym Menu+comma  exec pactl set-sink-volume \@DEFAULT_SINK@ -2.5%
 		#brightness
+		# bindsym Menu+m exec brightnessctl set 2.5%+
 		bindsym Menu+m exec brightnessctl set 2.5%+
 		bindsym Menu+Shift+m exec brightnessctl set 2.5%-
 		bindsym Menu+e exec ~/.local/bin/wofi-emoji
 		bindsym Menu+p exec ~/.local/bin/wofi-clipboard.sh
-
+		bindsym $mod+Shift+p exec ~/.local/bin/wofi-clipboard.sh
       # screenshot saved to a single image 
 		bindsym $mod+Shift+s exec grim -g "$(slurp)" - | tee ~/Pictures/screen.png | wl-copy 
-
+	 
