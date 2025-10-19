@@ -1,37 +1,51 @@
 window{
 	font-size:1rem;
-	font-family:monospace;
-  background-color:rgba(239,202,229,0.3);
-  padding:0.5rem 0.75rem;   
+	font-family:"Maple Mono NF",monospace;
+  background-color:#191724;
+  color:#e0def4;
+  padding:2rem;   
 	animation:popup 1s ease-in;
+}
+
+#outer-box{
+	padding:1rem;
+   border:2px solid #bbaffa;	
+	border-radius: 4px;
+	display: flex;
 }
 #entry{
 	padding:0.5rem 0.4rem;
 }
 #entry:selected{
-	 color:black;
+   /* background-color:#47435d; */
+   background-color: transparent;
+	color:#fefcff;
 	outline:none;
-	border:none;
-   background-color:rgba(192,219,223,0.4);
+   border:2px solid #bbaffa;
+	border-radius: 4px;
+  overflow:hidden;
 }
 #text{
-	color:white;
 }
 #text:selected{
-	color:black;
+	color:fefcff;
 	font-size:1.25rem;
 }
 #input{
   padding:0.5rem;
 	color:white;
-	background-color:rgba(239,202,239,0.3);
+	background-color:#26233a;
 	border:none;
 	outline:none;
 	border-radius:0px;
+	margin-bottom:2rem;
+	border-radius:4px;
 	font-size:1.2rem;
 }
-#input:focused{
+#input:focus{
+   outline-width: 0px;
 	border:none;
 	outline:none;
+	box-shadow: none ;
 }
 

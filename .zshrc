@@ -53,7 +53,12 @@ fcf() {
     "image/"*)
       chafa "$file" ;;
     "video/"*)
-		setsid mpv "$file" >/dev/null 2>&1 < /dev/null & ;;
+		mpv "$file"
+		#setsid mpv "$file" >/dev/null 2>&1 < /dev/null & ;;
+		;;
+		"audio/"*)
+		mpv "$file"
+		;;
     *)
       echo "No handler for filetype: $filetype"
       read -p "Open with vim anyway? [y/N] " ans
@@ -81,3 +86,4 @@ eval "$(pyenv init - zsh)"
 export GTK_ICON_THEME=Papirus-Dark
 export XCURSOR_THEME=Papirus
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+export _JAVA_AWT_WM_NONREPARENTING=1  

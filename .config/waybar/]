@@ -7,7 +7,7 @@
 
 window#waybar {
   background-color: rgba(0, 0, 0, 0);
-  border-radius: 0.5rem;
+  border-radius: 0.1rem;
   transition-property: background-color;
   transition-duration: .5s;
 }
@@ -20,6 +20,7 @@ button {
   border-radius: 0;
 }
 
+/* https://github.com/Alexays/Waybar/wiki/FAQ#the-workspace-buttons-have-a-strange-hover-effect */
 button:hover {
   background: inherit;
 }
@@ -69,7 +70,8 @@ button:hover {
 }
 
 #battery {
-  color: @magenta;
+  color: @green;
+  color:@red;
 
 }
 
@@ -78,13 +80,13 @@ button:hover {
 }
 
 #window {
-  color: @surface;
+  color: @rosewater;
 }
 
 .modules-right,
 .modules-left,
 .modules-center {
-  background-color: rgba(0, 0, 0,0);
+  background-color: @base;
   border-radius: 4px;
 }
 
@@ -99,12 +101,12 @@ button:hover {
 
 #battery.charging,
 #battery.plugged {
-  color: @green-light;
+  color: @sapphire;
 }
 
 /* Using steps() instead of linear as a timing function to limit cpu usage */
 #battery.critical:not(.charging) {
-  color:@red;
+  background-color: #f53c3c;
 }
 
 label:focus {
@@ -115,19 +117,6 @@ label:focus {
   color: @text;
 }
 
-#mpris.paused{
-  color:@magenta-light;
-}
-
 #custom-music,#mpris.playing{
-  color:@green-light;
-}
-
-@keyframes music{
-	0%{background-color:@blue-light;}
-	100%{background-color:@blue;}
-}
-@keyframes music{
-	0%{background-color:@blue-light;}
-	100%{background-color:@blue;}
+  color:@rosewater;
 }

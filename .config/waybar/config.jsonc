@@ -1,9 +1,9 @@
 {
     "position":"bottom",
-    "margin-top" : 5,
+    "margin-top" :0,
     "margin-left": 10,
-    "margin-right": 10,
-    "height" : 20,
+    "margin-right":10,
+    "height" :15,
    
    
    
@@ -37,7 +37,7 @@
 
    "clock": {
     "interval": 60,
-    "format": "{:%I:%M %p}",
+    "format": "{:%I:%M %p %d %a }",
     "max-length": 25 ,
 	 "format-alt": "{:%d-%m-%Y %A}",
 	 "tooltip":false,
@@ -65,6 +65,7 @@
       "format-charging": "󱐋 {icon} {capacity}%",
       "format-plugged": "plug {capacity}%",
       "format-alt": "{time} {icon}",
+		"on-click":"ags toggle wifi-module",
       "format-icons": ["", "", "", "", ""]
     },
     "network": {
@@ -78,19 +79,19 @@
     },
     "pulseaudio": {
       "format": "{icon} {volume}%",
-      "format-bluetooth": "{volume}% {icon} {format_source}",
-      "format-bluetooth-muted": " {icon} {format_source}",
+      "format-bluetooth": "{volume}% {icon}",
+      "format-bluetooth-muted": " {icon}",
       "format-muted": "muted",
       "format-icons": {
         "headphone": "󱡏 earphoned",
         "hands-free": "eek",
-        "headset": "bigchungus",
+        "headset": "󱡏 headset",
         "phone": "mobile",
         "portable": "mobile",
         "car": "fucking car ?",
         "default": ["", "",""]
       },
-      "on-click": "pavucontrol"
+      "on-click": "ags toggle wifi-module"
     }
 	 ,
 	 "mpris":{
@@ -98,7 +99,7 @@
        "format-paused":" {title} -{artist}",
 		 "interval":1,
 		 "title-len":20,
-		 "artist-len":20
+		 "artist-len":20,
 	 },
 	 "custom/music":{
 		"exec":"playerctl metadata --follow -f '{{title}} - {{artist}};'",
