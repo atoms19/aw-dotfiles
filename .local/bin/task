@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# Task manager script
+
+TASK_FILE="$HOME/.tasks.md"
+
+# Create task file if it doesn't exist
+if [ ! -f "$TASK_FILE" ]; then
+    touch "$TASK_FILE"
+fi
+
+# Function to display usage
+usage() {
+    echo "Usage: task <command> [arguments]"
+    echo
+    echo "Commands:"
+    echo "  add <text>    - Add a new task"
+    echo "  list          - List all tasks"
+    echo "  done <number> - Mark a task as complete"
+    echo "  undo <number> - Mark a task as pending"
+    echo "  rm <number>   - Remove a task"
+    echo "  help          - Show this help message"
+}
+
+# Main command logic
+case "$1" in
+    add)
+        shift
+        if [ -z "$*" ]; then
+            echo "Error: Task text cannot be empty."
+            exit 1
+        fi
+        echo "☐ $*" >> "$TASK_FILE"
+        echo "Task added."
+        ;;
+
+    list)
+        if [ ! -s "$TASK_FILE" ]; then
+            echo "No tasks yet. Add one with 'task add <text>'."
+        else
+            nl -w2 -s") " "$TASK_FILE"
+        fi
+        ;;
+
+    done|complete)
+        if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+            echo "Error: Please provide a valid task number."
+            exit 1
+        fi
+        if ! sed -i "${2}s/☐/☑/" "$TASK_FILE"; then
+            echo "Error: Could not mark task $2 as done. Invalid task number or task already done?"
+            exit 1
+		  fi
+        echo "Task $2 marked as done."
+        ;;
+
+    undo)
+        if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+            echo "Error: Please provide a valid task number."
+            exit 1
+        fi
+        if ! sed -i "${2}s/☑/☐/" "$TASK_FILE"; then
+            echo "Error: Could not undo task $2. Invalid task number or task not done?"
+            exit 1
+		  fi
+        echo "Task $2 marked as pending."
+        ;;
+
+    rm|remove)
+        if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+            echo "Error: Please provide a valid task number."
+            exit 1
+        fi
+        if ! sed -i "${2}d" "$TASK_FILE"; then
+            echo "Error: Could not remove task $2. Invalid task number?"
+            exit 1
+		  fi
+        echo "Task $2 removed."
+        ;;
+    
+    help)
+        usage
+        ;;
+
+    *)
+        usage
+        ;;
+esac
