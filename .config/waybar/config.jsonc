@@ -40,8 +40,30 @@
     "format": "{:%I:%M %p %d %a }",
     "max-length": 25 ,
 	 "format-alt": "{:%d-%m-%Y %A}",
-	 "tooltip":false,
-	 "on-click-right":"brave -t --new-window atomcalendar.vercel.app"
+	 "tooltip": true,
+	"tooltip-format": "<tt><small>{calendar}</small></tt>",
+	 "on-click-right":"brave -t --new-window atomcalendar.vercel.app",
+	"calendar": {
+		"mode"          : "month",
+		"mode-mon-col"  : 3,
+		"weeks-pos"     : "right",
+		"on-scroll"     : 1,
+		"on-click-right": "mode",
+		"format": {
+			"months":     "<span color='#bbaffa'><b>{}</b></span>",
+			"days":       "<span color='#fff'><b>{}</b></span>",
+			"weeks":      "<span color='#bbaffa'><b>W{}</b></span>",
+			"weekdays":   "<span color='#bbaffa'><b>{}</b></span>",
+			"today":      "<span color='#bbaffa'><b><u>{}</u></b></span>"
+		}
+	 },
+	 "actions": {
+		"on-click-right": "mode",
+		"on-click-forward": "tz_up",
+		"on-click-backward": "tz_down",
+		"on-scroll-up": "shift_up",
+		"on-scroll-down": "shift_down"
+	}
 }
     ,    "cpu": {
       "format": "  {usage}%",
@@ -91,6 +113,7 @@
         "car": "fucking car ?",
         "default": ["", "",""]
       },
+		"on-click-right":"pavucontrol",
       "on-click": "ags toggle wifi-module"
     }
 	 ,

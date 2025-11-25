@@ -2,25 +2,38 @@
 HISTFILE=~/.histfile
 HISTSIZE=1000
 SAVEHIST=1000
-bindkey -e
+
 
 # End of lines configured by zsh-newuser-install
 alias awa="ollama run dolphin3:8b-llama3.1-q4_K_M"
 # The following lines were added by compinstall
-alias vi=nvim 
+alias vi=nvim
+
+
+autoload -Uz vcs_info
+precmd() { vcs_info }
+
+setopt PROMPT_SUBST
+zstyle ':vcs_info:git:*' formats '%F{cyan} ( %b) %f'
+
+PROMPT='%F{magenta}%n%f %F{13}%~%f${vcs_info_msg_0_}%F{green}>%f '
+#----------------------------------
 zstyle :compinstall filename '/home/atoms/.zshrc'
 autoload -Uz compinit
 
-alias rain="python ~/.local/share/rain/terminal_rain_lightning.py"
+source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+fpath=(/usr/share/zsh/site-functions /usr/share/zsh/functions $fpath)
 compinit
+alias rain="python ~/.local/share/rain/terminal_rain_lightning.py"
 # End of lines added by compinstall
 #
-setopt PROMPT_SUBST
+# setopt PROMPT_SUBST
 
 
-zstyle ':vcs_info:git:*' formats '(  %b )'
-PROMPT='%n ${PWD/#$HOME/}${vcs_info_msg_0_}> '
-
+# zstyle ':vcs_info:git:*' formats '(  %b )'
+# PROMPT='%n ${PWD/#$HOME/}${vcs_info_msg_0_}> '
+# -------------------------------------
 lfcd () {
   tmp="$(mktemp)"
   lf -last-dir-path="$tmp" "$@"
@@ -29,15 +42,15 @@ lfcd () {
     rm -f "$tmp"
     cd "$dir"
   fi
+
 }
 
-alias java="_JAVA_AWT_WM_NONREPARENTING=1 java"
-alias config='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
-fcd() {
-  local dir
-  dir=$( fd --type d --hidden | fzf --height=40% --reverse --preview 'ls -la {}' --query="$1") && cd "$dir"
+fcd (){
+ local dir
+dir=$( fd --type d --hidden | fzf --height=40% --reverse --preview 'ls -la {}' --query="$1") && cd $dir 
 }
-# pnpm
+
+# -----
 fcf() {
   local file filetype
   file=$(fd --type f --hidden --exclude .git | fzf --height=40% --reverse --preview '~/.local/bin/preview.sh {}' --query="$1") || return
@@ -66,6 +79,10 @@ fcf() {
       ;;
   esac
 }
+alias java="_JAVA_AWT_WM_NONREPARENTING=1 java"
+alias config='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+# pnpm
+
 export PNPM_HOME="/home/atoms/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
@@ -87,3 +104,4 @@ export GTK_ICON_THEME=Papirus-Dark
 export XCURSOR_THEME=Papirus
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
 export _JAVA_AWT_WM_NONREPARENTING=1  
+export XDG_CONFIG_HOME="$HOME/.config"

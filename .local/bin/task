@@ -14,12 +14,13 @@ usage() {
     echo "Usage: task <command> [arguments]"
     echo
     echo "Commands:"
-    echo "  add <text>    - Add a new task"
-    echo "  list          - List all tasks"
-    echo "  done <number> - Mark a task as complete"
-    echo "  undo <number> - Mark a task as pending"
-    echo "  rm <number>   - Remove a task"
-    echo "  help          - Show this help message"
+    echo "  add <text>    					- Add a new task"
+    echo "  ls            					- List all tasks"
+    echo "  done <number> 					- Mark a task as complete"
+    echo "  undo <number> 					- Mark a task as pending"
+    echo "  rm <number>   					- Remove a task"
+	 echo "  shift <number> <number> 	-rearrange a task to a new position" 
+    echo "  help          					- Show this help message"
 }
 
 # Main command logic
@@ -34,11 +35,17 @@ case "$1" in
         echo "Task added."
         ;;
 
-    list)
+    ls|list)
         if [ ! -s "$TASK_FILE" ]; then
             echo "No tasks yet. Add one with 'task add <text>'."
         else
-            nl -w2 -s") " "$TASK_FILE"
+			   if nl -w2 -s" " "$TASK_FILE" | grep -q '☑'; then
+				  # print the completed task line as green color 
+				  nl -w2 -s" " "$TASK_FILE" | sed -e 's/.*☑.*/\x1b[32m&\x1b[0m/'
+				else
+				  # print the incomplete task as red color
+				  nl -w2 -s" " "$TASK_FILE" | sed -e 's/☐/\x1b[31m☐\x1b[0m/g'
+				 fi
         fi
         ;;
 
@@ -77,6 +84,20 @@ case "$1" in
 		  fi
         echo "Task $2 removed."
         ;;
+	 shift)
+				if ! [[ "$2" =~ ^[0-9]+$ ]] || ! [[ "$3" =~ ^[0-9]+$ ]]; then
+						echo "Error: Please provide valid task numbers."
+						exit 1
+				fi
+				TASK_CONTENT=$(sed -n "${2}p" "$TASK_FILE")
+				if [ -z "$TASK_CONTENT" ]; then
+						echo "Error: Task $2 does not exist."
+						exit 1
+				fi
+				sed -i "${2}d" "$TASK_FILE"
+				sed -i "${3}i $TASK_CONTENT" "$TASK_FILE"
+				echo "Task $2 moved to position $3."
+				;;
     
     help)
         usage

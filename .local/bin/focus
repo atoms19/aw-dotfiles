@@ -1,0 +1,200 @@
+#!/bin/bash
+
+# Defaults
+MODE="timer"          # timer, pomodoro, break, longbreak
+SESSION_COUNT=1
+SKIP_SHORT_BREAK=false
+SKIP_LONG_BREAK=false
+DURATION=""
+NOTIF_ID=0
+
+# Icons / Emojis
+ICON_WORK="🍅"
+ICON_BREAK="☕"
+ICON_LONG_BREAK="🧘"
+ICON_DONE="✅"
+
+# Sound file (Common path on Linux, falls back to beep if not found)
+SOUND_FILE="/usr/share/sounds/freedesktop/stereo/complete.oga"
+
+# --- Function: Helper to play sound ---
+play_notification_sound() {
+    if [ -f "$SOUND_FILE" ] && command -v paplay &> /dev/null; then
+        # Removed '&' so script waits for sound to finish before exiting
+        paplay "$SOUND_FILE"
+    elif command -v aplay &> /dev/null; then
+        echo -e "\a"
+    else
+        echo -e "\a"
+    fi
+}
+
+# --- Function: Convert input string to seconds ---
+parse_duration() {
+    local input="$1"
+    
+    # If empty, return 0
+    if [ -z "$input" ]; then echo 0; return; fi
+
+    # If pure number, assume minutes
+    if [[ "$input" =~ ^[0-9]+$ ]]; then
+        input="${input}m"
+    fi
+
+    # Calc seconds
+    printf '%s' "$input" | awk '
+    /m$/ {print substr($0,1,length($0)-1) * 60}
+    /s$/ {print substr($0,1,length($0)-1)}
+    /h$/ {print substr($0,1,length($0)-1) * 3600}
+    '
+}
+
+# --- Function: The Countdown Loop ---
+run_timer() {
+    local seconds=$1
+    local title=$2
+    local msg=$3
+    local icon=$4
+    
+    # Send initial notification to get ID
+    NOTIF_ID=$(notify-send -p "$icon $title" "Starting: $msg")
+    
+    while [ $seconds -gt 0 ]; do
+        m=$((seconds / 60))
+        s=$((seconds % 60))
+
+        # Update Terminal
+        # Clear line and print
+        printf "\r\033[K%s [%02d:%02d] %s" "$icon" "$m" "$s" "$msg"
+
+        # Update Notification (only every 5 seconds to reduce flicker/load, or last 5 seconds)
+        if (( seconds % 5 == 0 || seconds < 10 )); then
+            NOTIF_ID=$(notify-send \
+                --replace-id=$NOTIF_ID -p \
+                "$icon $title" \
+                "$(printf '%02d:%02d left' "$m" "$s")")
+        fi
+
+        sleep 1
+        ((seconds--))
+    done
+
+    # Finalize
+    printf "\r\033[K%s %s Complete!\n" "$ICON_DONE" "$title"
+    notify-send --replace-id=$NOTIF_ID -u critical "$ICON_DONE $title Finished" "Session complete!"
+    play_notification_sound
+}
+
+# --- Argument Parsing ---
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -p|--p|pom|pomodoro)
+            MODE="pomodoro"
+            # Check if next argument is a number (session count)
+            if [[ "$2" =~ ^[0-9]+$ ]]; then
+                SESSION_COUNT="$2"
+                shift # skip the number
+            else
+                SESSION_COUNT=1 # Default to 1 if no number provided
+            fi
+            shift
+            ;;
+        --nb|-nobreak)
+            SKIP_SHORT_BREAK=true
+            shift
+            ;;
+        --nlb|-nolongbreak)
+            SKIP_LONG_BREAK=true
+            shift
+            ;;
+        -b)
+            MODE="break"
+            shift
+            ;;
+        -lb)
+            MODE="longbreak"
+            shift
+            ;;
+        *)
+            # If it's a flag but unknown
+            if [[ "$1" == -* ]]; then
+                echo "Unknown option: $1"
+                exit 1
+            fi
+            # Otherwise it's the custom duration for basic timer
+            DURATION="$1"
+            shift
+            ;;
+    esac
+done
+
+# --- Execution Logic ---
+
+# 1. Manual Short Break
+if [[ "$MODE" == "break" ]]; then
+    secs=$(parse_duration "5m")
+    run_timer "$secs" "Short Break" "Take a breather" "$ICON_BREAK"
+    exit 0
+fi
+
+# 2. Manual Long Break
+if [[ "$MODE" == "longbreak" ]]; then
+    secs=$(parse_duration "15m")
+    run_timer "$secs" "Long Break" "Relax and recharge" "$ICON_LONG_BREAK"
+    exit 0
+fi
+
+# 3. Pomodoro Mode
+if [[ "$MODE" == "pomodoro" ]]; then
+    WORK_SECS=$(parse_duration "25m")
+    SHORT_BREAK_SECS=$(parse_duration "5m")
+    LONG_BREAK_SECS=$(parse_duration "15m")
+
+    echo "🍅 Starting Pomodoro: $SESSION_COUNT sessions"
+
+    for (( i=1; i<=SESSION_COUNT; i++ )); do
+        # Run Work Session
+        run_timer "$WORK_SECS" "Focus Session ($i/$SESSION_COUNT)" "Stay focused!" "$ICON_WORK"
+
+        # --- Break Logic ---
+        
+        # Condition 1: Every 4th session triggers a Long Break (regardless of if it's the last one)
+        if (( i % 4 == 0 )); then
+            if [[ "$SKIP_LONG_BREAK" == "false" ]]; then
+                echo -e "\nReached 4 sessions. Starting Long Break..."
+                run_timer "$LONG_BREAK_SECS" "Long Break" "Go for a walk" "$ICON_LONG_BREAK"
+            else
+                 echo -e "\nSkipping Long Break (--nlb active)"
+            fi
+            
+        # Condition 2: Regular sessions trigger Short Break (BUT not if it's the very last session requested)
+        elif (( i < SESSION_COUNT )); then
+            if [[ "$SKIP_SHORT_BREAK" == "false" ]]; then
+                echo -e "\nStarting Short Break..."
+                run_timer "$SHORT_BREAK_SECS" "Short Break" "Stretch your legs" "$ICON_BREAK"
+            else
+                echo -e "\nSkipping Short Break (--nb active)"
+            fi
+        fi
+        
+    done
+    exit 0
+fi
+
+# 4. Standard Timer Mode (Legacy Support)
+if [[ -n "$DURATION" ]]; then
+    secs=$(parse_duration "$DURATION")
+    if [ "$secs" -eq 0 ]; then
+        echo "Invalid duration."
+        exit 1
+    fi
+    run_timer "$secs" "Timer" "Countdown" "⏳"
+else
+    echo "Usage:"
+    echo "  focus 25m           # Start normal timer"
+    echo "  focus -p            # Start 1 Pomodoro session (25m)"
+    echo "  focus -p 4          # Start 4 Pomodoro sessions (with Long Break at end)"
+    echo "  focus -p 4 --nb     # 4 sessions, no short breaks"
+    echo "  focus -b            # Start manual short break (5m)"
+    echo "  focus -lb           # Start manual long break (15m)"
+fi

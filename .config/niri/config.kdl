@@ -1,0 +1,265 @@
+//                                      ATOMS NIRI CONFIGURATION FILE
+
+// STARTUP ====================================================================
+spawn-at-startup "waybar"
+spawn-sh-at-startup "wlsunset -l 9.9983 -L 76.3167 -T 6500 -t 4200"
+spawn-sh-at-startup "ags run '.config/ags'"
+spawn-sh-at-startup "ollama serve"
+spawn-sh-at-startup "swww-daemon"
+spawn-sh-at-startup "swww-daemon -n overlay"
+spawn-at-startup "swayidle" "-w" "timeout" "620" "niri msg action power-off-monitors" "timeout" "600" "~/.local/bin/lock.sh" "before-sleep" "~/.local/bin/lock.sh"
+// INPUT ====================================================================
+input {
+    keyboard {
+        xkb { 
+            layout "us"
+
+				// mod+space to toggle layouts
+				// right alt key can be used to compose characters like ñ, ü, etc.
+				// caps lock is annoying so its remapped to be another ctrl
+				// lv5 is ISO_Level5_Shift used as an added modifier in my 60% keyboard (for function row utils like volume,brightnessctl etc)
+            options "grp:win_space_toggle,compose:ralt,ctrl:nocaps,lv5:menu_switch"
+        }
+        numlock
+    }
+
+    touchpad {
+        tap
+		  dwt
+		  // scroll-factor 0.7
+        natural-scroll
+        scroll-method "two-finger"
+		  drag-lock 
+    }
+
+    mouse {
+        natural-scroll
+    }
+
+    warp-mouse-to-focus
+    focus-follows-mouse max-scroll-amount="0%"
+}
+
+// DISPLAY ====================================================================
+output "eDP-1" {
+    mode "1920x1080@120.030"
+    scale 1
+    transform "normal"
+    position x=1280 y=0
+}
+output "HDMI-A-1" {
+		mode "1920x1080@60.00"
+		scale 1
+		transform "normal"
+		position x=0 y=0
+}
+
+// LAYOUT ====================================================================
+layout {
+    gaps 7
+    center-focused-column "never"
+	 always-center-single-column
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+        proportion 0.25
+    }
+
+    preset-window-heights {
+        proportion 0.5
+        proportion 1.0
+        proportion 0.3
+    }
+
+    default-column-width { proportion 0.5; }
+
+    focus-ring {
+        width 2
+        active-color "#bbaffa"
+        inactive-color "#857a96"
+    }
+
+    background-color "00000000"
+}
+// BEHAVIOR ====================================================================
+prefer-no-csd
+screenshot-path "~/Pictures/Screenshots/screen.png"
+
+animations {
+    slowdown 0.19
+    window-open {}
+    window-close {}
+	 window-movement{
+    }
+    workspace-switch {}
+}
+
+// WINDOW RULES ====================================================================
+window-rule {
+    match app-id=r#"brave$"# title="^Picture-in-Picture$"
+    open-floating true
+
+}
+
+window-rule {
+    geometry-corner-radius 2
+    clip-to-geometry true
+}
+
+window-rule {
+    match app-id="^foot"
+    opacity 0.91
+}
+
+window-rule{
+  match app-id="^brave"
+  default-column-width { proportion 1.0; }
+  open-on-workspace "web"
+}
+
+// WORKSPACE RULES ====================================================================
+
+workspace "web" {}
+
+// LAYER RULES ====================================================================
+layer-rule {
+    match namespace="^wallpaper$"
+    place-within-backdrop true
+}
+
+layer-rule {
+    match namespace="^wofi$"
+}
+
+layer-rule {
+    match namespace="^swww-daemonoverlay$"
+    place-within-backdrop true
+}
+
+// OVERVIEW ====================================================================
+overview {
+    workspace-shadow { 
+	 off 
+  }
+    backdrop-color "#00000000"
+}
+
+// BINDS ====================================================================
+binds {
+
+    Mod+Slash hotkey-overlay-title=null { show-hotkey-overlay; }
+    Mod+Q hotkey-overlay-title="Open terminal" { spawn "foot"; }
+    Mod+Return hotkey-overlay-title="Launch Apps" { spawn "wofi" "--show" "drun"; }
+    Super+Alt+L hotkey-overlay-title="Lock pc" { spawn "~/.local/bin/lock.sh"; }
+    Mod+Shift+Q hotkey-overlay-title="Clone a terminal" { spawn "~/.local/bin/foot-clone.sh"; }
+    Mod+E hotkey-overlay-title="Bring up emoji selector" { spawn-sh "~/.local/bin/wofi-emoji"; }
+	 Mod+P hotkey-overlay-title="Bring up clipboard" { spawn-sh "~/.local/bin/wofi-clipboard.sh"; }
+
+    XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
+    XF86AudioMute allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+    XF86AudioMicMute allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+    XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
+  
+	 ISO_Level5_Shift+Period {spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+";} 
+	 ISO_Level5_Shift+Comma {spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-";}
+    ISO_Level5_Shift+M {spawn "brightnessctl" "--class=backlight" "set" "+10%";}
+    ISO_Level5_Shift+Shift+M {spawn "brightnessctl" "--class=backlight" "set" "10%-";}
+	 ISO_Level5_Shift+Return {spawn "wofi" "--show" "drun";}
+	 ISO_Level5_Shift+P {spawn-sh "~/.local/bin/wofi-clipboard.sh";}
+    ISO_Level5_Shift+Space {spawn-sh "playerctl play-pause";}
+
+    Mod+O hotkey-overlay-title=null { toggle-overview; }
+    Mod+C hotkey-overlay-title="Close focused window" { close-window; }
+    Mod+H hotkey-overlay-title="focus window left" { focus-column-left; }
+    Mod+J hotkey-overlay-title="focus window down"  { focus-window-down; }
+    Mod+K hotkey-overlay-title="focus window up" { focus-window-up; }
+    Mod+L hotkey-overlay-title="focus window-right" { focus-column-right; }
+
+    Mod+Shift+H hotkey-overlay-title=null { move-column-left; }
+    Mod+Shift+J hotkey-overlay-title=null { move-window-down; }
+    Mod+Shift+K hotkey-overlay-title=null { move-window-up; }
+    Mod+Shift+L hotkey-overlay-title=null { move-column-right; }
+    Mod+Escape { toggle-keyboard-shortcuts-inhibit; }
+/*
+ I only have one monitor why bother 
+    Mod+Sft+H { focus-monitor-left; }
+    Mod+Shift+J { focus-monitor-down; }
+    Mod+Shift+K { focus-monitor-up; }
+    Mod+Shift+L { focus-monitor-right; }
+
+    Mod+Shift+Ctrl+H { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+J { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+K { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+L { move-column-to-monitor-right; }
+*/
+    Mod+U hotkey-overlay-title="See workspace below" { focus-workspace-down; }
+    Mod+I hotkey-overlay-title="See workspace above" { focus-workspace-up; }
+    Mod+Shift+U hotkey-overlay-title="Move window to workspace below" { move-column-to-workspace-down; }
+    Mod+Shift+I hotkey-overlay-title="Move window to workspace above" { move-column-to-workspace-up; }
+    Mod+Ctrl+U { move-workspace-down; }
+    Mod+Ctrl+I { move-workspace-up; }
+
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+
+    Mod+Shift+1 { move-column-to-workspace 1; }
+    Mod+Shift+2 { move-column-to-workspace 2; }
+    Mod+Shift+3 { move-column-to-workspace 3; }
+    Mod+Shift+4 { move-column-to-workspace 4; }
+    Mod+Shift+5 { move-column-to-workspace 5; }
+    Mod+Shift+6 { move-column-to-workspace 6; }
+    Mod+Shift+7 { move-column-to-workspace 7; }
+    Mod+Shift+8 { move-column-to-workspace 8; }
+    Mod+Shift+9 { move-column-to-workspace 9; }
+
+
+    Mod+BracketLeft  hotkey-overlay-title="stack/unstack window to left" { consume-or-expel-window-left; }
+    Mod+BracketRight hotkey-overlay-title="stack/unstack window to right" { consume-or-expel-window-right; }
+
+    Mod+Comma  { consume-window-into-column; }
+    Mod+Period { expel-window-from-column; }
+
+
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    Mod+R hotkey-overlay-title=null { switch-preset-column-width; }
+    Mod+Shift+R hotkey-overlay-title=null { switch-preset-window-height; }
+    Mod+Ctrl+R hotkey-overlay-title=null { reset-window-height; }
+    Mod+F hotkey-overlay-title="maximize window" { maximize-column; }
+    Mod+Shift+F hotkey-overlay-title="Enter Fullscreen" { fullscreen-window; }
+    Mod+Ctrl+F { expand-column-to-available-width; }
+    Mod+Shift+C { center-column; }
+    Mod+Ctrl+C { center-visible-columns; }
+    
+    Mod+Shift+T hotkey-overlay-title="Toggle Tabbing of stacked windows" { toggle-column-tabbed-display;}
+    Mod+V hotkey-overlay-title="Toggle Window Floating" { toggle-window-floating; }
+    Mod+Shift+V hotkey-overlay-title=null { switch-focus-between-floating-and-tiling; }
+
+    Print hotkey-overlay-title=null { screenshot; }
+    Mod+Shift+S  hotkey-overlay-title="Take a screenshot" { screenshot; }
+
+    Mod+Shift+E hotkey-overlay-title="Exit Session" { quit; }
+    Ctrl+Alt+Delete { quit; }
+    Mod+Shift+P { power-off-monitors; }
+}
+
+// GESTURES ====================================================================
+gestures {
+    hot-corners {
+        off
+    }
+}
