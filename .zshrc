@@ -93,7 +93,7 @@ esac
 # bun completions
 [ -s "/home/atoms/.bun/_bun" ] && source "/home/atoms/.bun/_bun"
 
-# bun
+# bun prine
 export PATH="$HOME/.local/bin:$PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
@@ -105,3 +105,4 @@ export XCURSOR_THEME=Papirus
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
 export _JAVA_AWT_WM_NONREPARENTING=1  
 export XDG_CONFIG_HOME="$HOME/.config"
+export FZF_DEFAULT_OPTS="--color=fg:#e0def4,hl:#569cd6,fg+:#bbaffa,bg+:#26233a,hl+:#ebbcba,info:#31748f,pointer:#31748f,marker:#f6c177,spinner:#89b4fa,header:#cba6f7"

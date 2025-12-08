@@ -1,0 +1,1 @@
+cliphist list | fzf --height 40% --prompt "Clipboard: " --color=fg:#e0def4,hl:#569cd6,fg+:#bbaffa,bg+:#26233a,hl+:#ebbcba,info:#31748f,pointer:#31748f,marker:#f6c177,spinner:#89b4fa,header:#cba6f7 --reverse --preview 'echo {} | awk "{print$1}" | cliphist decode | ~/.local/bin/preview.sh ' |   cliphist decode | wl-copy

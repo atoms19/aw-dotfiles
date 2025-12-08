@@ -1,88 +1,110 @@
 #!/bin/bash
 
 # Defaults
-MODE="timer"          # timer, pomodoro, break, longbreak
+MODE="timer"          
 SESSION_COUNT=1
 SKIP_SHORT_BREAK=false
 SKIP_LONG_BREAK=false
 DURATION=""
 NOTIF_ID=0
 
-# Icons / Emojis
+# Task Integration
+TASK_FILE="$HOME/.tasks.md"
+TASK_NAME=""
+TASK_ID=""
+
+# Icons
 ICON_WORK="🍅"
 ICON_BREAK="☕"
 ICON_LONG_BREAK="🧘"
 ICON_DONE="✅"
 
-# Sound file (Common path on Linux, falls back to beep if not found)
 SOUND_FILE="/usr/share/sounds/freedesktop/stereo/complete.oga"
 
-# --- Function: Helper to play sound ---
 play_notification_sound() {
     if [ -f "$SOUND_FILE" ] && command -v paplay &> /dev/null; then
-        # Removed '&' so script waits for sound to finish before exiting
         paplay "$SOUND_FILE"
-    elif command -v aplay &> /dev/null; then
-        echo -e "\a"
     else
         echo -e "\a"
     fi
 }
 
-# --- Function: Convert input string to seconds ---
 parse_duration() {
     local input="$1"
-    
-    # If empty, return 0
     if [ -z "$input" ]; then echo 0; return; fi
-
-    # If pure number, assume minutes
-    if [[ "$input" =~ ^[0-9]+$ ]]; then
-        input="${input}m"
-    fi
-
-    # Calc seconds
-    printf '%s' "$input" | awk '
-    /m$/ {print substr($0,1,length($0)-1) * 60}
-    /s$/ {print substr($0,1,length($0)-1)}
-    /h$/ {print substr($0,1,length($0)-1) * 3600}
-    '
+    if [[ "$input" =~ ^[0-9]+$ ]]; then input="${input}m"; fi
+    printf '%s' "$input" | awk '/m$/ {print substr($0,1,length($0)-1) * 60} /s$/ {print substr($0,1,length($0)-1)} /h$/ {print substr($0,1,length($0)-1) * 3600}'
 }
 
-# --- Function: The Countdown Loop ---
 run_timer() {
     local seconds=$1
     local title=$2
     local msg=$3
     local icon=$4
     
-    # Send initial notification to get ID
-    NOTIF_ID=$(notify-send -p "$icon $title" "Starting: $msg")
+    # Append Task Name if it exists
+    if [ -n "$TASK_NAME" ]; then
+        msg="$msg | Task: $TASK_NAME"
+    fi
+    
+    NOTIF_ID=$(notify-send -p "$icon $title" "$msg")
     
     while [ $seconds -gt 0 ]; do
         m=$((seconds / 60))
         s=$((seconds % 60))
 
-        # Update Terminal
-        # Clear line and print
+        # Terminal Display
         printf "\r\033[K%s [%02d:%02d] %s" "$icon" "$m" "$s" "$msg"
 
-        # Update Notification (only every 5 seconds to reduce flicker/load, or last 5 seconds)
         if (( seconds % 5 == 0 || seconds < 10 )); then
-            NOTIF_ID=$(notify-send \
-                --replace-id=$NOTIF_ID -p \
-                "$icon $title" \
-                "$(printf '%02d:%02d left' "$m" "$s")")
+            NOTIF_ID=$(notify-send --replace-id=$NOTIF_ID -p "$icon $title" "$(printf '%02d:%02d left' "$m" "$s")")
         fi
 
         sleep 1
         ((seconds--))
     done
 
-    # Finalize
     printf "\r\033[K%s %s Complete!\n" "$ICON_DONE" "$title"
     notify-send --replace-id=$NOTIF_ID -u critical "$ICON_DONE $title Finished" "Session complete!"
     play_notification_sound
+}
+
+# --- Interactive Task Selection ---
+select_task() {
+    if [ ! -f "$TASK_FILE" ]; then echo "No task file found."; exit 1; fi
+    
+    echo "Select a task to focus on:"
+    
+    # Read tasks into array
+    IFS=$'\n' read -d '' -r -a TASKS < <(grep "\- \[ \]" "$TASK_FILE")
+    
+    if [ ${#TASKS[@]} -eq 0 ]; then
+        echo "No pending tasks found."
+        exit 1
+    fi
+
+    select task in "${TASKS[@]}"; do
+        if [ -n "$task" ]; then
+            # Extract raw text for display
+            RAW=$(echo "$task" | sed -E 's/- \[.\] //; s/\(est:[0-9]+\)//g; s/\(due:[^)]+\)//g; s/\(cat:[^)]+\)//g' | xargs)
+            TASK_NAME="$RAW"
+            
+            # Find line number (Task ID)
+            # We grep the file for the exact line to get line number
+            TASK_ID=$(grep -nF "$task" "$TASK_FILE" | cut -d: -f1 | head -n 1)
+
+            # Check for Estimate
+            re_est="\(est:([0-9]+)\)"
+            if [[ "$task" =~ $re_est ]]; then
+                SESSION_COUNT="${BASH_REMATCH[1]}"
+            fi
+            
+            MODE="pomodoro"
+            break
+        else
+            echo "Invalid selection."
+        fi
+    done
 }
 
 # --- Argument Parsing ---
@@ -90,111 +112,83 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         -p|--p|pom|pomodoro)
             MODE="pomodoro"
-            # Check if next argument is a number (session count)
-            if [[ "$2" =~ ^[0-9]+$ ]]; then
-                SESSION_COUNT="$2"
-                shift # skip the number
-            else
-                SESSION_COUNT=1 # Default to 1 if no number provided
-            fi
-            shift
-            ;;
-        --nb|-nobreak)
-            SKIP_SHORT_BREAK=true
-            shift
-            ;;
-        --nlb|-nolongbreak)
-            SKIP_LONG_BREAK=true
-            shift
-            ;;
-        -b)
-            MODE="break"
-            shift
-            ;;
-        -lb)
-            MODE="longbreak"
-            shift
-            ;;
+            if [[ "$2" =~ ^[0-9]+$ ]]; then SESSION_COUNT="$2"; shift; else SESSION_COUNT=1; fi
+            shift ;;
+        --nb|-nobreak) SKIP_SHORT_BREAK=true; shift ;;
+        --nlb|-nolongbreak) SKIP_LONG_BREAK=true; shift ;;
+        -b) MODE="break"; shift ;;
+        -lb) MODE="longbreak"; shift ;;
+        
+        # New Integration Flags
+        -t|--task) select_task; shift ;; 
+        --task-name) TASK_NAME="$2"; shift 2 ;;
+        --task-id) TASK_ID="$2"; shift 2 ;;
+        --name) TASK_NAME="$2"; shift 2 ;;  # Manual name override
+
         *)
-            # If it's a flag but unknown
-            if [[ "$1" == -* ]]; then
-                echo "Unknown option: $1"
-                exit 1
-            fi
-            # Otherwise it's the custom duration for basic timer
+            if [[ "$1" == -* ]]; then echo "Unknown option: $1"; exit 1; fi
             DURATION="$1"
-            shift
-            ;;
+            shift ;;
     esac
 done
 
-# --- Execution Logic ---
+# --- Execution ---
 
-# 1. Manual Short Break
 if [[ "$MODE" == "break" ]]; then
-    secs=$(parse_duration "5m")
-    run_timer "$secs" "Short Break" "Take a breather" "$ICON_BREAK"
+    run_timer $(parse_duration "5m") "Short Break" "Take a breather" "$ICON_BREAK"
     exit 0
 fi
 
-# 2. Manual Long Break
 if [[ "$MODE" == "longbreak" ]]; then
-    secs=$(parse_duration "15m")
-    run_timer "$secs" "Long Break" "Relax and recharge" "$ICON_LONG_BREAK"
+    run_timer $(parse_duration "15m") "Long Break" "Relax" "$ICON_LONG_BREAK"
     exit 0
 fi
 
-# 3. Pomodoro Mode
 if [[ "$MODE" == "pomodoro" ]]; then
     WORK_SECS=$(parse_duration "25m")
     SHORT_BREAK_SECS=$(parse_duration "5m")
     LONG_BREAK_SECS=$(parse_duration "15m")
 
-    echo "🍅 Starting Pomodoro: $SESSION_COUNT sessions"
+    echo -e "🍅 Pomodoro: $SESSION_COUNT sessions | Task: ${TASK_NAME:-"General Focus"}"
 
     for (( i=1; i<=SESSION_COUNT; i++ )); do
-        # Run Work Session
-        run_timer "$WORK_SECS" "Focus Session ($i/$SESSION_COUNT)" "Stay focused!" "$ICON_WORK"
+        run_timer "$WORK_SECS" "Focus ($i/$SESSION_COUNT)" "Stay focused!" "$ICON_WORK"
 
-        # --- Break Logic ---
-        
-        # Condition 1: Every 4th session triggers a Long Break (regardless of if it's the last one)
+        # Break Logic
         if (( i % 4 == 0 )); then
             if [[ "$SKIP_LONG_BREAK" == "false" ]]; then
                 echo -e "\nReached 4 sessions. Starting Long Break..."
-                run_timer "$LONG_BREAK_SECS" "Long Break" "Go for a walk" "$ICON_LONG_BREAK"
-            else
-                 echo -e "\nSkipping Long Break (--nlb active)"
+                run_timer "$LONG_BREAK_SECS" "Long Break" "Relax" "$ICON_LONG_BREAK"
             fi
-            
-        # Condition 2: Regular sessions trigger Short Break (BUT not if it's the very last session requested)
         elif (( i < SESSION_COUNT )); then
             if [[ "$SKIP_SHORT_BREAK" == "false" ]]; then
                 echo -e "\nStarting Short Break..."
-                run_timer "$SHORT_BREAK_SECS" "Short Break" "Stretch your legs" "$ICON_BREAK"
-            else
-                echo -e "\nSkipping Short Break (--nb active)"
+                run_timer "$SHORT_BREAK_SECS" "Short Break" "Stretch" "$ICON_BREAK"
             fi
         fi
-        
     done
+    
+    # --- Post-Session Task Completion Hook ---
+    if [ -n "$TASK_ID" ]; then
+        echo -e "\n"
+        read -p "Did you complete '$TASK_NAME'? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            # Call task script to mark done
+            if command -v task &> /dev/null; then
+                task done "$TASK_ID"
+            else
+                echo "Task script not in path. Please mark task $TASK_ID done manually."
+            fi
+        fi
+    fi
+    
     exit 0
 fi
 
-# 4. Standard Timer Mode (Legacy Support)
 if [[ -n "$DURATION" ]]; then
     secs=$(parse_duration "$DURATION")
-    if [ "$secs" -eq 0 ]; then
-        echo "Invalid duration."
-        exit 1
-    fi
     run_timer "$secs" "Timer" "Countdown" "⏳"
 else
-    echo "Usage:"
-    echo "  focus 25m           # Start normal timer"
-    echo "  focus -p            # Start 1 Pomodoro session (25m)"
-    echo "  focus -p 4          # Start 4 Pomodoro sessions (with Long Break at end)"
-    echo "  focus -p 4 --nb     # 4 sessions, no short breaks"
-    echo "  focus -b            # Start manual short break (5m)"
-    echo "  focus -lb           # Start manual long break (15m)"
+    echo "Usage: focus [time] | focus -p [num] | focus -t (select task)"
 fi

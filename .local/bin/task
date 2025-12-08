@@ -1,8 +1,15 @@
 #!/bin/bash
 
-# Task manager script
-
 TASK_FILE="$HOME/.tasks.md"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+GREY='\033[0;90m'
+RESET='\033[0m'
 
 # Create task file if it doesn't exist
 if [ ! -f "$TASK_FILE" ]; then
@@ -11,99 +18,166 @@ fi
 
 # Function to display usage
 usage() {
+    echo -e "${BLUE}Task Manager${RESET}"
     echo "Usage: task <command> [arguments]"
     echo
     echo "Commands:"
-    echo "  add <text>    					- Add a new task"
-    echo "  ls            					- List all tasks"
-    echo "  done <number> 					- Mark a task as complete"
-    echo "  undo <number> 					- Mark a task as pending"
-    echo "  rm <number>   					- Remove a task"
-	 echo "  shift <number> <number> 	-rearrange a task to a new position" 
-    echo "  help          					- Show this help message"
+    echo "  add <text> [flags]   - Add task. Flags: -e <poms> (est), -d <date>, -c <cat>"
+    echo "  start <num>          - Start a Focus Session for this task"
+    echo "  ls [category]        - List tasks (optionally filter by category)"
+    echo "  done <num>           - Mark task as complete"
+    echo "  undo <num>           - Mark task as pending"
+    echo "  rm <num>             - Remove a task"
+    echo "  shift <from> <to>    - Move task from line <from> to line <to>"
+    echo "  prune                - Remove all completed tasks"
+    echo "  clear                - Delete ALL tasks"
+    echo
+    echo "Examples:"
+    echo "  task add \"Write code\" -e 3 -d today"
+    echo "  task start 1"
 }
 
-# Main command logic
+# --- Command Logic ---
 case "$1" in
     add)
         shift
-        if [ -z "$*" ]; then
-            echo "Error: Task text cannot be empty."
+        DESCRIPTION=""
+        ESTIMATE=""
+        DUE_DATE=""
+        CATEGORY=""
+        
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -e|--est) ESTIMATE=" (est:$2)"; shift 2 ;;
+                -d|--due)
+                    if [[ "$2" == "today" ]]; then DATE_VAL=$(date +%F);
+                    elif [[ "$2" == "tomorrow" ]]; then DATE_VAL=$(date -d "+1 day" +%F);
+                    elif [[ "$2" == "thisweek" ]]; then DATE_VAL=$(date -d "+7 days" +%F);
+                    else DATE_VAL="$2"; fi
+                    DUE_DATE=" (due:$DATE_VAL)"; shift 2 ;;
+                -c|--cat) CATEGORY=" (cat:$2)"; shift 2 ;;
+                *) DESCRIPTION="$DESCRIPTION $1"; shift ;;
+            esac
+        done
+        
+        DESCRIPTION=$(echo "$DESCRIPTION" | sed 's/^ *//')
+        if [ -z "$DESCRIPTION" ]; then echo "Error: Task text cannot be empty."; exit 1; fi
+        if [ -z "$ESTIMATE" ]; then ESTIMATE=" (est:1)"; fi
+        
+        echo "- [ ] $DESCRIPTION$ESTIMATE$DUE_DATE$CATEGORY" >> "$TASK_FILE"
+        echo -e "${GREEN}Task added.${RESET}"
+        ;;
+
+    start)
+        if ! [[ "$2" =~ ^[0-9]+$ ]]; then echo "Invalid number."; exit 1; fi
+        
+        # Check if focus script exists
+        if ! command -v focus &> /dev/null; then
+            echo "Error: 'focus' script not found in PATH."
             exit 1
         fi
-        echo "☐ $*" >> "$TASK_FILE"
-        echo "Task added."
+
+        # Extract Line
+        LINE=$(sed -n "${2}p" "$TASK_FILE")
+        if [ -z "$LINE" ]; then echo "Task not found."; exit 1; fi
+
+        # Extract Description (Remove metadata tags for display)
+        DESC=$(echo "$LINE" | sed -E 's/- \[.\] //; s/\(est:[0-9]+\)//g; s/\(due:[^)]+\)//g; s/\(cat:[^)]+\)//g')
+        DESC=$(echo "$DESC" | xargs) # trim whitespace
+
+        # Extract Estimate for session count
+        re_est="\(est:([0-9]+)\)"
+        if [[ "$LINE" =~ $re_est ]]; then
+            EST="${BASH_REMATCH[1]}"
+        else
+            EST=1
+        fi
+
+        echo -e "${BLUE}Starting task: $DESC ($EST sessions)${RESET}"
+        # Handover to focus script
+        focus -p "$EST" --task-name "$DESC" --task-id "$2"
         ;;
 
     ls|list)
+        FILTER_CAT="$2"
         if [ ! -s "$TASK_FILE" ]; then
-            echo "No tasks yet. Add one with 'task add <text>'."
+            echo "No tasks yet."
         else
-			   if nl -w2 -s" " "$TASK_FILE" | grep -q '☑'; then
-				  # print the completed task line as green color 
-				  nl -w2 -s" " "$TASK_FILE" | sed -e 's/.*☑.*/\x1b[32m&\x1b[0m/'
-				else
-				  # print the incomplete task as red color
-				  nl -w2 -s" " "$TASK_FILE" | sed -e 's/☐/\x1b[31m☐\x1b[0m/g'
-				 fi
+            printf "${BLUE}%-3s %-2s %-3s %-12s %-10s %s${RESET}\n" "ID" "St" "Est" "Due" "Category" "Task"
+            echo -e "${GREY}------------------------------------------------------------${RESET}"
+            
+            i=1
+            while IFS= read -r line; do
+                if [[ "$line" == *"- [x]"* ]]; then
+                    STATUS="${GREEN}☑${RESET}"; COLOR="$GREY"; RAW_TEXT="${line/- [x] /}"
+                else
+                    STATUS="${RED}☐${RESET}"; COLOR="$RESET"; RAW_TEXT="${line/- [ ] /}"
+                fi
+
+                re_est="\(est:([0-9]+)\)"
+                if [[ "$RAW_TEXT" =~ $re_est ]]; then POM_COUNT="${BASH_REMATCH[1]}"; else POM_COUNT="1"; fi
+                
+                re_due="\(due:([0-9]{4}-[0-9]{2}-[0-9]{2})\)"
+                if [[ "$RAW_TEXT" =~ $re_due ]]; then
+                    DUE_VAL="${BASH_REMATCH[1]}"; TODAY=$(date +%F)
+                    if [[ "$line" == *"- [ ]"* ]] && [[ "$DUE_VAL" < "$TODAY" ]]; then
+                        DUE_DISPLAY="${RED}$DUE_VAL${RESET}"; COLOR="$RED"
+                    else
+                        DUE_DISPLAY="${BLUE}$DUE_VAL${RESET}"
+                    fi
+                else
+                    DUE_DISPLAY="${GREY}No Due      ${RESET}"
+                fi
+
+                re_cat="\(cat:([^)]+)\)"
+                if [[ "$RAW_TEXT" =~ $re_cat ]]; then CAT_VAL="${BASH_REMATCH[1]}"; else CAT_VAL="-"; fi
+
+                if [ -n "$FILTER_CAT" ] && [ "$CAT_VAL" != "$FILTER_CAT" ]; then ((i++)); continue; fi
+
+                DISPLAY_TEXT=$(echo "$RAW_TEXT" | sed -E 's/\(est:[0-9]+\)//g; s/\(due:[0-9-]+\)//g; s/\(cat:[^)]+\)//g')
+                printf "%-3s %b  %-3s %b %-10s %b%s%b\n" "$i" "$STATUS" "$POM_COUNT" "$DUE_DISPLAY" "$CAT_VAL" "$COLOR" "$DISPLAY_TEXT" "$RESET"
+                ((i++))
+            done < "$TASK_FILE"
         fi
         ;;
 
     done|complete)
-        if ! [[ "$2" =~ ^[0-9]+$ ]]; then
-            echo "Error: Please provide a valid task number."
-            exit 1
-        fi
-        if ! sed -i "${2}s/☐/☑/" "$TASK_FILE"; then
-            echo "Error: Could not mark task $2 as done. Invalid task number or task already done?"
-            exit 1
-		  fi
-        echo "Task $2 marked as done."
+        if ! [[ "$2" =~ ^[0-9]+$ ]]; then echo "Invalid number."; exit 1; fi
+        sed -i "${2}s/- \[ \]/- [x]/" "$TASK_FILE"
+        echo -e "${GREEN}Task $2 done.${RESET}"
         ;;
 
     undo)
-        if ! [[ "$2" =~ ^[0-9]+$ ]]; then
-            echo "Error: Please provide a valid task number."
-            exit 1
-        fi
-        if ! sed -i "${2}s/☑/☐/" "$TASK_FILE"; then
-            echo "Error: Could not undo task $2. Invalid task number or task not done?"
-            exit 1
-		  fi
-        echo "Task $2 marked as pending."
+        if ! [[ "$2" =~ ^[0-9]+$ ]]; then echo "Invalid number."; exit 1; fi
+        sed -i "${2}s/- \[x\]/- [ ]/" "$TASK_FILE"
+        echo -e "${YELLOW}Task $2 pending.${RESET}"
         ;;
 
     rm|remove)
-        if ! [[ "$2" =~ ^[0-9]+$ ]]; then
-            echo "Error: Please provide a valid task number."
-            exit 1
-        fi
-        if ! sed -i "${2}d" "$TASK_FILE"; then
-            echo "Error: Could not remove task $2. Invalid task number?"
-            exit 1
-		  fi
-        echo "Task $2 removed."
-        ;;
-	 shift)
-				if ! [[ "$2" =~ ^[0-9]+$ ]] || ! [[ "$3" =~ ^[0-9]+$ ]]; then
-						echo "Error: Please provide valid task numbers."
-						exit 1
-				fi
-				TASK_CONTENT=$(sed -n "${2}p" "$TASK_FILE")
-				if [ -z "$TASK_CONTENT" ]; then
-						echo "Error: Task $2 does not exist."
-						exit 1
-				fi
-				sed -i "${2}d" "$TASK_FILE"
-				sed -i "${3}i $TASK_CONTENT" "$TASK_FILE"
-				echo "Task $2 moved to position $3."
-				;;
-    
-    help)
-        usage
+        if ! [[ "$2" =~ ^[0-9]+$ ]]; then echo "Invalid number."; exit 1; fi
+        sed -i "${2}d" "$TASK_FILE"
+        echo -e "${RED}Task $2 removed.${RESET}"
         ;;
 
-    *)
-        usage
+    shift)
+        SRC=$2; DEST=$3
+        TOTAL_LINES=$(wc -l < "$TASK_FILE")
+        if [ "$SRC" -gt "$TOTAL_LINES" ] || [ "$DEST" -gt "$TOTAL_LINES" ]; then echo "Error: Index out of bounds."; exit 1; fi
+        LINE_CONTENT=$(sed -n "${SRC}p" "$TASK_FILE")
+        sed -i "${SRC}d" "$TASK_FILE"
+        if [ "$DEST" -ge "$TOTAL_LINES" ]; then echo "$LINE_CONTENT" >> "$TASK_FILE"; else sed -i "${DEST}i $LINE_CONTENT" "$TASK_FILE"; fi
+        echo "Task moved."
         ;;
+
+    prune)
+        sed -i '/- \[x\]/d' "$TASK_FILE"
+        echo -e "${GREEN}Cleared completed tasks.${RESET}"
+        ;;
+
+    clear)
+        read -p "Delete ALL tasks? (y/n) " -n 1 -r; echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then > "$TASK_FILE"; echo "All tasks cleared."; fi
+        ;;
+
+    help|*) usage ;;
 esac

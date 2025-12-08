@@ -1,5 +1,5 @@
 " Keywords
-syntax keyword awlKeyword  for break in if else while for return let fun struct new 
+syntax keyword awlKeyword  for break in if else while for return let fun struct new include
 highlight link awlKeyword Keyword
 
 

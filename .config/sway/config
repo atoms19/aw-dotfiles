@@ -33,10 +33,13 @@ set $files "org.gnome.Nautilus"
 # visuals .....................................................
 
 # setting wallpaper 
-# output * bg  /home/atoms/Pictures/forest.jpeg fill
-output * bg  /home/atoms/Downloads/wallnew.jpg fill
-output * bg  /home/atoms/Downloads/wallnew-colorized.png fill
+ # output * bg  /home/atoms/Pictures/forest.jpeg fill
+# output * bg  /home/atoms/Downloads/wallnew.jpg fill
+# output * bg  /home/atoms/Downloads/wallnew-colorized.png fill
+# output * bg   /home/atoms/Downloads/sse.png fill 
 
+
+exec_always swww-daemon
 # window___
 
 #border thickness
@@ -50,6 +53,7 @@ for_window [app_id=$term] opacity 0.7
 for_window [app_id=$files] opacity 0.7
 for_window [app_id="org.pulseaudio.pavucontrol"] opacity 0.35
 for_window [class=".*"] opacity 0.9
+ for_window [app_id="Brave-browser"] opacity 1.0
 # window tiling behaviour 
 exec_always autotiling-rs
 exec swayosd_server
@@ -80,7 +84,6 @@ exec_always ollama serve
  # idle mode 
  for_window [class="Brave-browser"] inhibit_idle fullscreen
  for_window [class="Brave-browser"] inhibit_idle focus
-
 exec_always swayidle \
   timeout 300 ~/.local/bin/lock.sh \
   timeout 330 'swaymsg "output * dpms off"' \

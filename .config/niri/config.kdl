@@ -4,10 +4,10 @@
 spawn-at-startup "waybar"
 spawn-sh-at-startup "wlsunset -l 9.9983 -L 76.3167 -T 6500 -t 4200"
 spawn-sh-at-startup "ags run '.config/ags'"
-spawn-sh-at-startup "ollama serve"
 spawn-sh-at-startup "swww-daemon"
 spawn-sh-at-startup "swww-daemon -n overlay"
 spawn-at-startup "swayidle" "-w" "timeout" "620" "niri msg action power-off-monitors" "timeout" "600" "~/.local/bin/lock.sh" "before-sleep" "~/.local/bin/lock.sh"
+spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
 // INPUT ====================================================================
 input {
     keyboard {
@@ -89,10 +89,19 @@ screenshot-path "~/Pictures/Screenshots/screen.png"
 
 animations {
     slowdown 0.19
-    window-open {}
+    window-open {
+		off
+	 }
     window-close {}
-	 window-movement{
+
+	 horizontal-view-movement {
+   //     spring damping-ratio=0.8 stiffness=300 epsilon=0.0001
     }
+
+    window-movement {
+    //    spring damping-ratio=0.8 stiffness=300 epsilon=0.0001
+    }
+	
     workspace-switch {}
 }
 
@@ -104,8 +113,22 @@ window-rule {
 }
 
 window-rule {
+  	match app-id="^launcher$"
+		open-floating true
+    opacity 0.91
+}
+
+window-rule {
     geometry-corner-radius 2
     clip-to-geometry true
+}
+
+window-rule{
+  match app-id="^brave"
+  default-column-width { proportion 1.0; }
+}
+window-rule {
+  match app-id="^zathura"
 }
 
 window-rule {
@@ -113,16 +136,11 @@ window-rule {
     opacity 0.91
 }
 
-window-rule{
-  match app-id="^brave"
-  default-column-width { proportion 1.0; }
-  open-on-workspace "web"
-}
-
 // WORKSPACE RULES ====================================================================
 
-workspace "web" {}
-
+//workspace "term" {}
+//workspace "study" {}
+//workspace "web" {}
 // LAYER RULES ====================================================================
 layer-rule {
     match namespace="^wallpaper$"
@@ -130,7 +148,7 @@ layer-rule {
 }
 
 layer-rule {
-    match namespace="^wofi$"
+    match namespace="^launcher$"
 }
 
 layer-rule {
@@ -144,6 +162,7 @@ overview {
 	 off 
   }
     backdrop-color "#00000000"
+	 zoom 0.3
 }
 
 // BINDS ====================================================================
@@ -151,12 +170,14 @@ binds {
 
     Mod+Slash hotkey-overlay-title=null { show-hotkey-overlay; }
     Mod+Q hotkey-overlay-title="Open terminal" { spawn "foot"; }
-    Mod+Return hotkey-overlay-title="Launch Apps" { spawn "wofi" "--show" "drun"; }
+    // Mod+Return hotkey-overlay-title="Launch Apps" { spawn "wofi" "--show" "drun"; }
+	 Mod+Return hotkey-overlay-title="Launch Apps" { spawn-sh "foot -e --app-id=launcher ~/.local/bin/app-launcher.sh"; }
     Super+Alt+L hotkey-overlay-title="Lock pc" { spawn "~/.local/bin/lock.sh"; }
     Mod+Shift+Q hotkey-overlay-title="Clone a terminal" { spawn "~/.local/bin/foot-clone.sh"; }
-    Mod+E hotkey-overlay-title="Bring up emoji selector" { spawn-sh "~/.local/bin/wofi-emoji"; }
-	 Mod+P hotkey-overlay-title="Bring up clipboard" { spawn-sh "~/.local/bin/wofi-clipboard.sh"; }
+    Mod+E hotkey-overlay-title="Bring up emoji selector" { spawn-sh "foot -e --app-id=launcher  ~/.local/bin/emoji-launcher.sh"; }
+	 Mod+P hotkey-overlay-title="Bring up clipboard" { spawn-sh "foot -e --app-id=launcher  ~/.local/bin/clipboard-launcher.sh"; }
 
+	 Mod+BackSlash hotkey-overlay-title="Bring up clipboard" { spawn-sh "foot -e --app-id=launcher  ~/.local/bin/quick-launcher.sh"; }
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
     XF86AudioMute allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
@@ -202,7 +223,10 @@ binds {
     Mod+Shift+I hotkey-overlay-title="Move window to workspace above" { move-column-to-workspace-up; }
     Mod+Ctrl+U { move-workspace-down; }
     Mod+Ctrl+I { move-workspace-up; }
-
+	 
+	 Mod+w {focus-workspace-up;}
+	 Mod+S {focus-workspace-down;}
+	 Mod+Shift+w {move-column-to-workspace-up;}
     Mod+1 { focus-workspace 1; }
     Mod+2 { focus-workspace 2; }
     Mod+3 { focus-workspace 3; }

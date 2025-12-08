@@ -2,12 +2,11 @@
 
 * {
   font-family: "Maple Mono NF",serif;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 window#waybar {
-  background-color: rgba(0, 0, 0, 0);
-  border-radius: 0.5rem;
+  background-color: @surface;
   transition-property: background-color;
   transition-duration: .5s;
 }
