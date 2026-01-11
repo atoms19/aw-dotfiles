@@ -106,3 +106,13 @@ export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
 export _JAVA_AWT_WM_NONREPARENTING=1  
 export XDG_CONFIG_HOME="$HOME/.config"
 export FZF_DEFAULT_OPTS="--color=fg:#e0def4,hl:#569cd6,fg+:#bbaffa,bg+:#26233a,hl+:#ebbcba,info:#31748f,pointer:#31748f,marker:#f6c177,spinner:#89b4fa,header:#cba6f7"
+
+
+
+preexec() {
+    print -Pn "\e]0;$1 - zsh\a"
+}
+
+precmd() {
+    print -Pn "\e]0;terminal\a"
+}

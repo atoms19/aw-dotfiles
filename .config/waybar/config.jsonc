@@ -1,5 +1,5 @@
 {
-    "position":"bottom",
+    "position":"top",
     "margin-top" :0,
    // "margin-left": 10,
    // "margin-right":10,
@@ -8,10 +8,11 @@
    
    
     "modules-left": [
-         "clock"
+         "clock",
+		"niri/window",
     ],
     "modules-center": [
-		"mpris"
+"mpris"
     ],
     "modules-right": [
           "network",
@@ -26,7 +27,16 @@
         "": "smotium core"
       },
       "separate-outputs": true
-    }
+    },
+
+"niri/window": {
+	"format": "{}",
+	"rewrite": {
+		"(.*) - Brave": "󰖟 $1",
+		"(.*) - zsh": " [$1]",
+		"foot": "terminal"
+	}
+}
     ,
     
     "sway/workspaces": {
@@ -113,6 +123,7 @@
         "car": "fucking car ?",
         "default": ["", "",""]
       },
+		"on-click-middle":"foot bluetui",
 		"on-click-right":"pavucontrol",
       "on-click": "ags toggle wifi-module"
     }

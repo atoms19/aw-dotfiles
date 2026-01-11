@@ -22,7 +22,7 @@ done
 
 # if no wallpaper provided, use fcf to pick one
 if [[ -z "$wall" ]]; then
-  wall=$(fd --type f --hidden --exclude .git | fzf --height=40% --reverse --preview '~/.local/bin/preview.sh {}' --query="Pictures/Wall") || return 
+  wall=$(fd --type f --hidden --exclude .git  . ~/Pictures/Wall | fzf --height=40% --reverse --with-nth=-1 --preview '~/.local/bin/preview.sh {}' --delimiter='/' ) || return 
 fi
 
 # if still empty, exit
@@ -38,7 +38,7 @@ if ! pgrep -x "swww-daemon" >/dev/null; then
 fi
 
 # set wallpaper
-swww img "$wall"
+swww img -t fade "$wall"
 
 # create blurred version
 ffmpeg -loglevel quiet  -i "$wall" -vf "gblur=sigma=${blur_radius}" -y ~/Pictures/wall-blur.jpeg
@@ -47,5 +47,4 @@ ffmpeg -loglevel quiet  -i "$wall" -vf "gblur=sigma=${blur_radius}" -y ~/Picture
 swww img -n overlay ~/Pictures/wall-blur.jpeg
 
 # wait and clean up
-sleep 1
 echo "wallpaper changed"

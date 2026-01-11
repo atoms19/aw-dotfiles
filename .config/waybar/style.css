@@ -2,11 +2,11 @@
 
 * {
   font-family: "Maple Mono NF",serif;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 window#waybar {
-  background-color: @surface;
+  background-color:@surface;
   transition-property: background-color;
   transition-duration: .5s;
 }
@@ -22,7 +22,10 @@ button {
 button:hover {
   background: inherit;
 }
-
+#window{
+  background-color: @surface;
+	color: @red;
+}
 
 #workspaces button {
   padding: 0 5px;
@@ -57,10 +60,12 @@ button:hover {
 
 #pulseaudio {
   color: @red;
+  /* color: #b0252c; */
 }
 
 #network {
   color: @yellow;
+  /* color: #8a6125; */
 }
 
 #temperature {
@@ -69,15 +74,18 @@ button:hover {
 
 #battery {
   color: @magenta;
+  /* color: #6a2a9c;  */
 
 }
 
 #clock {
-  color: #ffffff;
+  /* color: @surface; */
+  color: @text;
+  /* color : #6a5a75; */
 }
 
 #window {
-  color: @surface;
+  color: @magenta;
 }
 
 .modules-right,
@@ -98,12 +106,14 @@ button:hover {
 
 #battery.charging,
 #battery.plugged {
-  color: @green-light;
+  /* color: @green-light; */
+  color: #486b5b;
 }
 
 /* Using steps() instead of linear as a timing function to limit cpu usage */
 #battery.critical:not(.charging) {
-  color:@red;
+  /* color:@red; */
+  color:#b0252c;
 }
 
 label:focus {
@@ -116,10 +126,13 @@ label:focus {
 
 #mpris.paused{
   color:@magenta-light;
+
+  /* color:@surface-light; */
 }
 
 #custom-music,#mpris.playing{
   color:@green-light;
+  /* color:#486b5b; */
 }
 
 @keyframes music{

@@ -1,0 +1,89 @@
+
+
+#window-box {
+	 color:white;
+	 font-family: 'Maple Mono NF', monospace;
+}
+
+
+#window-box #unlock-button {
+		background:#31748f;
+		border-color:#31748f;
+		margin-bottom: 2.5rem;
+		margin-top: -2.5rem;
+}
+
+
+#window-box #clock-label {
+  margin-bottom: 4rem;
+  font-size: 15rem;
+}
+
+
+#window-box #input-field {
+	 background:rgba(50, 50, 50, 0.15);
+	 color:white;
+	 margin-right:7rem;
+	 margin-left:10rem;
+	 border: none;
+	 outline: none;
+	 box-shadow: none;
+	 outline-color: transparent;
+}
+
+#window-box #input-field:focus {
+	 border:none;
+	 outline:none;
+	 box-shadow:none;
+	 outline-color: transparent;
+}
+
+
+#window-box #input-field:hover {
+	 border:none;
+	 outline:none;
+	 box-shadow:none;
+	 outline-color: transparent;
+}
+
+#input-label{
+  font-size:0;
+}
+
+
+#window-box #error-label {
+   color:#af4f4f;
+}
+
+
+#window-box #warning-label {
+color:#af844f;
+
+}
+
+
+#window-box #unlock-button:active {
+  background:#56a3e2;
+}
+/*
+.background {
+}
+
+
+
+
+#window-box #unlock-button:hover {}
+
+#window-box #unlock-button:active {}
+
+
+#window-box #input-field:hover {}
+
+#window-box #input-field:active {}
+
+#window-box #input-field:focus {}
+
+#window-box #warning-label {}
+
+#window-box #error-label {}
+*/

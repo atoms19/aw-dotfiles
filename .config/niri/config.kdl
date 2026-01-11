@@ -3,10 +3,11 @@
 // STARTUP ====================================================================
 spawn-at-startup "waybar"
 spawn-sh-at-startup "wlsunset -l 9.9983 -L 76.3167 -T 6500 -t 4200"
-spawn-sh-at-startup "ags run '.config/ags'"
+// spawn-sh-at-startup "ags run '.config/ags'"
 spawn-sh-at-startup "swww-daemon"
 spawn-sh-at-startup "swww-daemon -n overlay"
-spawn-at-startup "swayidle" "-w" "timeout" "620" "niri msg action power-off-monitors" "timeout" "600" "~/.local/bin/lock.sh" "before-sleep" "~/.local/bin/lock.sh"
+// spawn-at-startup "swayidle" "-w" "timeout" "620" "niri msg action power-off-monitors" "timeout" "600" "~/.local/bin/lock.sh" "before-sleep" "~/.local/bin/lock.sh"
+spawn-at-startup "swayidle" "-w" "timeout" "60" "systemctl suspend" "before-sleep" "~/.local/bin/lock.sh" 
 spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
 // INPUT ====================================================================
 input {
@@ -26,7 +27,7 @@ input {
     touchpad {
         tap
 		  dwt
-		  // scroll-factor 0.7
+		 scroll-factor 2.5
         natural-scroll
         scroll-method "two-finger"
 		  drag-lock 
@@ -51,12 +52,12 @@ output "HDMI-A-1" {
 		mode "1920x1080@60.00"
 		scale 1
 		transform "normal"
-		position x=0 y=0
+		position x=1280 y=0
 }
 
 // LAYOUT ====================================================================
 layout {
-    gaps 7
+    gaps 5
     center-focused-column "never"
 	 always-center-single-column
 
@@ -82,6 +83,13 @@ layout {
     }
 
     background-color "00000000"
+	 struts {
+       bottom 0 
+		 top -5
+		 left -3
+		 right -3
+
+	 }
 }
 // BEHAVIOR ====================================================================
 prefer-no-csd
@@ -187,8 +195,8 @@ binds {
   
 	 ISO_Level5_Shift+Period {spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+";} 
 	 ISO_Level5_Shift+Comma {spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-";}
-    ISO_Level5_Shift+M {spawn "brightnessctl" "--class=backlight" "set" "+10%";}
-    ISO_Level5_Shift+Shift+M {spawn "brightnessctl" "--class=backlight" "set" "10%-";}
+    ISO_Level5_Shift+M {spawn "brightnessctl" "--class=backlight" "set" "+1%";}
+    ISO_Level5_Shift+Shift+M {spawn "brightnessctl" "--class=backlight" "set" "1%-";}
 	 ISO_Level5_Shift+Return {spawn "wofi" "--show" "drun";}
 	 ISO_Level5_Shift+P {spawn-sh "~/.local/bin/wofi-clipboard.sh";}
     ISO_Level5_Shift+Space {spawn-sh "playerctl play-pause";}

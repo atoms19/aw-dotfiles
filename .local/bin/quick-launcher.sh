@@ -4,27 +4,25 @@ actions="\
 AI: Start AWA
 Blog: New Blog Writeup
 Blog: Update Blog list
-DB: Initialize Postgres Database
-DB: Initialize SQL Database
-DB: SQL shell
-DB: New SQL Backup
-DB: Postgres shell
-DB: New postgres Backup
+DB: Create new Database
+DB: Enter DB shell
+DB: New Database Backup
 AWS: New BucketStorage
 AWS: Status
 VM: New Virtual Machine
 VM: Start Virtual Machine
 System: Deep Cleanup
 System: Grub Update
+Desktop: Screen timeout
+Desktop: Set Wallpaper\
 "
 
 choice=$(printf "%s\n" "$actions" | fzf --height 90% --reverse --ansi \
-    --prompt="System Command: "  \
-    --color=fg:#e0def4,hl:#569cd6,fg+:#bbaffa,bg+:#26233a,hl+:#ebbcba,info:#31748f,pointer:#31748f,marker:#f6c177,spinner:#89b4fa,header:#cba6f7)
+    --prompt="System Command: ")  
 
 declare -A dispatch=(
   ["AI: Start AWA"]="$HOME/.local/bin/helpers/awa-start.sh"
-  ["Blog: New Blog Writeup"]="$HOME/scripts/blog/new-blog-writeup.sh"
+  ["Blog: New Blog Writeup"]="$HOME/.local/bin/helpers/new-blog.sh"
   ["Blog: Update Blog list"]="$HOME/scripts/blog/update-blog-list.sh"
   ["DB: Initialize Postgres Database"]="$HOME/scripts/database/init-postgres-db.sh"
   ["DB: Initialize SQL Database"]="$HOME/scripts/database/init-sql-db.sh"
@@ -38,6 +36,8 @@ declare -A dispatch=(
   ["VM: Start Virtual Machine"]="$HOME/.local/bin/helpers/start-vm.sh"
   ["System: Deep Cleanup"]="$HOME/scripts/system/deep-cleanup.sh"
   ["System: Grub Update"]="$HOME/scripts/system/grub-update.sh"
+  ["Desktop: Set Wallpaper"]="$HOME/.local/bin/set-wall"
+  ["Desktop: Screen timeout"]="$HOME/.local/bin/helpers/screen-timeout.sh"
 )
 
 if [[ -n "$choice" && -n "${dispatch[$choice]}" ]]; then
